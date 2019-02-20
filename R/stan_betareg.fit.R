@@ -35,7 +35,7 @@ stan_betareg.fit <-
            algorithm = c("sampling", "optimizing", "meanfield", "fullrank"),
            adapt_delta = NULL, 
            QR = FALSE,
-           draws = 1000) {
+           draws = 4000) {
   
   algorithm <- match.arg(algorithm)
   
