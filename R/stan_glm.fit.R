@@ -46,7 +46,7 @@ stan_glm.fit <-
            sparse = FALSE,
            draws = 4000,
            sir = TRUE,
-           thin = 2) {
+           thin = 1) {
   
   # prior_ops deprecated but make sure it still works until 
   # removed in future release
@@ -531,10 +531,8 @@ stan_glm.fit <-
             if (standata$len_theta_L) "theta_L",
             if (!standata$clogit) "mean_PPD")
   if (algorithm == "optimizing") {
-    ## to improve SIR draw more and resample less
-    if (!sir) thin <- 1  
     out <- optimizing(stanfit, data = standata, 
-                      draws = draws*thin, constrained = TRUE, ...)
+                      draws = draws, constrained = TRUE, ...)
     check_stanfit(out)
     new_names <- names(out$par)
     mark <- grepl("^beta\\[[[:digit:]]+\\]$", new_names)
@@ -572,7 +570,7 @@ stan_glm.fit <-
     ## SIR
     out$siri <- NULL
     if (sir) {  
-      siri <- .sample_indices(exp(p$log_weights), n_draws=draws)
+      siri <- .sample_indices(exp(p$log_weights), n_draws=ceiling(draws/thin))
       out$theta_tilde <- out$theta_tilde[siri,]
       out$siri <- siri
       ## SIR mcse and n_eff
@@ -964,6 +962,10 @@ summarize_glm_prior <-
 }
 
 .sample_indices <- function(wts, n_draws) {
+  ## Stratified resampling
+  ##   Kitagawa, G., Monte Carlo Filter and Smoother for Non-Gaussian
+  ##   Nonlinear State Space Models, Journal of Computational and
+  ##   Graphical Statistics, 5(1):1-25, 1996.
   K <- length(wts)
   w <- n_draws * wts # expected number of draws from each model
   idx <- rep(NA, n_draws)
