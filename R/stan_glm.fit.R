@@ -44,7 +44,8 @@ stan_glm.fit <-
            adapt_delta = NULL, 
            QR = FALSE, 
            sparse = FALSE,
-           draws = 4000,
+           tol_rel_grad = 1e4, 
+           draws = 1000,
            importance_resampling = TRUE,
            thin = 1) {
   
@@ -531,7 +532,7 @@ stan_glm.fit <-
             if (standata$len_theta_L) "theta_L",
             if (!standata$clogit) "mean_PPD")
   if (algorithm == "optimizing") {
-    out <- optimizing(stanfit, data = standata, 
+    out <- optimizing(stanfit, data = standata, tol_rel_grad = tol_rel_grad,
                       draws = draws, constrained = TRUE, ...)
     check_stanfit(out)
     new_names <- names(out$par)
